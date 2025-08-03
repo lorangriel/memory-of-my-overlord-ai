@@ -1,6 +1,6 @@
-# Memory of My Overlord AI
+# Memory of My Overlord AI (aka Jason)
 
-An experiment in building memory tools for local large language models.
+Memory of My Overlord AI (aka Jason) is an experiment in building memory tools for local large language models.
 
 ## Conversation memory
 
