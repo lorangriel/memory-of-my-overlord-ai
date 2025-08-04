@@ -11,7 +11,23 @@ tracking chat messages. It can:
 - retrieve recent history for inclusion in prompts
 - save/load the conversation to a JSONL file
 
-This is only a starting point for richer context handling.
+ This is only a starting point for richer context handling.
+
+## Entity memory
+
+The `EntityMemory` class manages a separate `ConversationMemory` for each
+entity identifier, making it straightforward to track multiple characters or
+participants simultaneously. Each entity's messages are stored and retrieved
+independently.
+
+```python
+from memory import EntityMemory
+
+mem = EntityMemory()
+mem.add_message("wizard", "user", "Greetings")
+mem.add_message("dragon", "user", "Roar")
+print(mem.to_prompt("wizard"))  # -> "user: Greetings"
+```
 
 ## Integrating with a local LLM
 

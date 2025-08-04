@@ -20,6 +20,7 @@ class ChatMessage:
 
     role: str
     content: str
+    entity: str | None = None
     timestamp: float = field(
         default_factory=lambda: datetime.now(timezone.utc).timestamp()
     )
@@ -36,10 +37,24 @@ class ConversationMemory:
 
     # ------------------------------------------------------------------
     # mutation
-    def add_message(self, role: str, content: str) -> None:
-        """Append a message to the conversation history."""
+    def add_message(
+        self, role: str, content: str, entity: str | None = None
+    ) -> None:
+        """Append a message to the conversation history.
 
-        self._messages.append(ChatMessage(role=role, content=content))
+        Parameters
+        ----------
+        role:
+            The speaker's role in the conversation, e.g. ``"user"``.
+        content:
+            The textual content of the message.
+        entity:
+            Optional identifier for the entity associated with the message.
+        """
+
+        self._messages.append(
+            ChatMessage(role=role, content=content, entity=entity)
+        )
 
     # ------------------------------------------------------------------
     # access
@@ -93,3 +108,77 @@ class ConversationMemory:
 
     def __iter__(self) -> Iterable[ChatMessage]:  # pragma: no cover - trivial
         return iter(self._messages)
+
+
+class EntityMemory:
+    """Manage separate conversation memories for multiple entities.
+
+    Each entity identifier maps to its own :class:`ConversationMemory` instance.
+    Messages are recorded per entity and can be saved/loaded from disk with the
+    entity information preserved.
+    """
+
+    def __init__(self) -> None:
+        self._entities: dict[str, ConversationMemory] = {}
+
+    # ------------------------------------------------------------------
+    # mutation
+    def add_message(self, entity: str, role: str, content: str) -> None:
+        """Append a message for ``entity``.
+
+        A :class:`ConversationMemory` is created automatically for unknown
+        entities.
+        """
+
+        self._entities.setdefault(entity, ConversationMemory()).add_message(
+            role, content, entity=entity
+        )
+
+    # ------------------------------------------------------------------
+    # access
+    def get_recent(self, entity: str, limit: int = 5) -> List[ChatMessage]:
+        """Return recent messages for ``entity``."""
+
+        mem = self._entities.get(entity)
+        if not mem:
+            return []
+        return mem.get_recent(limit)
+
+    def to_prompt(self, entity: str, limit: int = 5) -> str:
+        """Format ``entity``'s recent messages as a prompt string."""
+
+        mem = self._entities.get(entity)
+        if not mem:
+            return ""
+        return mem.to_prompt(limit)
+
+    # ------------------------------------------------------------------
+    # persistence helpers
+    def save(self, path: str | Path) -> None:
+        """Persist all entity memories to ``path`` as JSON lines."""
+
+        p = Path(path)
+        with p.open("w", encoding="utf-8") as fh:
+            for entity, mem in self._entities.items():
+                for msg in mem:
+                    json.dump({"entity": entity, **msg.__dict__}, fh)
+                    fh.write("\n")
+
+    @classmethod
+    def load(cls, path: str | Path) -> "EntityMemory":
+        """Load entity memories from ``path`` if it exists."""
+
+        mem = cls()
+        p = Path(path)
+        if not p.exists():
+            return mem
+        with p.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                data = json.loads(line)
+                entity = data.pop("entity")
+                msg = ChatMessage(**data)
+                mem._entities.setdefault(entity, ConversationMemory())._messages.append(
+                    msg
+                )
+        return mem
+
