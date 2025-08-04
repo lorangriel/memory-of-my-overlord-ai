@@ -29,6 +29,16 @@ mem.add_message("dragon", "user", "Roar")
 print(mem.to_prompt("wizard"))  # -> "user: Greetings"
 ```
 
+To track locations or other non-character entities, use descriptive identifiers:
+
+```python
+mem.add_message("Coal Mine X", "status", "depleted")
+mem.add_message("Northwatch City", "status", "on high alert after raid")
+print(mem.to_prompt("Northwatch City"))
+```
+
+See `examples/world_state_example.py` for a complete demonstration.
+
 ## Integrating with a local LLM
 
 The `examples/local_llm_example.py` script demonstrates pairing
