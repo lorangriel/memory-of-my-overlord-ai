@@ -38,3 +38,13 @@ def test_entity_memory_persistence(tmp_path):
     mem.save(path)
     loaded = EntityMemory.load(path)
     assert loaded.to_prompt("hero") == "user: Hello"
+
+
+def test_entity_memory_add_messages_multiple_entities():
+    mem = EntityMemory()
+    mem.add_messages([
+        ("hero", "user", "Hi"),
+        ("villain", "assistant", "Boo"),
+    ])
+    assert mem.to_prompt("hero") == "user: Hi"
+    assert mem.to_prompt("villain") == "assistant: Boo"

@@ -115,7 +115,8 @@ class EntityMemory:
 
     Each entity identifier maps to its own :class:`ConversationMemory` instance.
     Messages are recorded per entity and can be saved/loaded from disk with the
-    entity information preserved.
+    entity information preserved. Use :meth:`add_messages` to record multi-entity
+    interactions efficiently.
     """
 
     def __init__(self) -> None:
@@ -127,12 +128,27 @@ class EntityMemory:
         """Append a message for ``entity``.
 
         A :class:`ConversationMemory` is created automatically for unknown
-        entities.
+        entities. For recording interactions with multiple entities, prefer
+        :meth:`add_messages`.
         """
 
         self._entities.setdefault(entity, ConversationMemory()).add_message(
             role, content, entity=entity
         )
+
+    def add_messages(self, items: Iterable[tuple[str, str, str]]) -> None:
+        """Append multiple messages for possibly different entities.
+
+        Parameters
+        ----------
+        items:
+            Iterable of ``(entity, role, content)`` tuples.
+
+        This is the recommended way to store multi-entity interactions.
+        """
+
+        for entity, role, content in items:
+            self.add_message(entity, role, content)
 
     # ------------------------------------------------------------------
     # access
