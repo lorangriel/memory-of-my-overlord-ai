@@ -58,3 +58,17 @@ library. To try it out:
 The script maintains conversation state and feeds the recent history to the
 local model on every turn, allowing the model to respond with awareness of the
 previous messages.
+
+## Quick start with `gpt-oss-20b`
+
+If you are running an OpenAI-compatible server exposing the
+`openai/gpt-oss-20b` model at `http://127.0.0.1:1234`, you can chat with it
+using the bundled **Momoa** script:
+
+```bash
+python Momoa
+```
+
+The script automatically connects to the local server and keeps track of the
+conversation using `ConversationMemory`, so no additional configuration or API
+keys are required.
